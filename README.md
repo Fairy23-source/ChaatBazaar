@@ -93,14 +93,16 @@ Follow these steps to contribute your changes to **ChaatBazaar**:
 
 ## Important points for Contributors to keep in Mind :
 
-If the original repository gets updated after you fork it, you should sync your fork before creating a new PR. This prevents merge conflicts and outdated code.
+1. Maintain the Orange theme, throughout the Wesbite.
+
+2. If the original repository gets updated after you fork it, you should sync your fork before creating a new PR. This prevents merge conflicts and outdated code.
 So always follow the below steps, before any Pull request, for the corresponding Branch, to keep the repository upto date :
 
 
 
 ## Method 1: Using Git Commands (Terminal Users)
 
-###  Fetch latest changes from original repo
+### Step - 1 : Fetch latest changes from original repo
    ```bash
    git fetch upstream
    ```
@@ -108,20 +110,20 @@ So always follow the below steps, before any Pull request, for the corresponding
 
 
 
-### Step - 2: Merge changes into your local main branch
+### Step - 2 : Merge changes into your local main branch
    ```bash
    git merge upstream/main
    ```
 
 
 
-### Step - 3: Push updated code to your fork
+### Step - 3 : Push updated code to your fork
    ```bash
    git push origin main
    ```
 
 
----
+
 
 
 ## Method 2:  If using Github Desktop app :
@@ -131,9 +133,8 @@ So always follow the below steps, before any Pull request, for the corresponding
 2. Click "Sync fork" button (if visible)
 3. Click "Update branch"
 
-Done ✔️
 
----
+
 
 ### Step - 2: 
 
