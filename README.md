@@ -37,7 +37,6 @@ Follow these steps to contribute your changes to **ChaatBazaar**:
    Click the **“Fork”** the repo to create your own copy:  
    👉 [https://github.com/PatelHarsh2006/ChaatBazaar](https://github.com/PatelHarsh2006/ChaatBazaar)
 
----
 
 2. **📥 Clone Your Fork**  
    Use the following command to clone your forked repository to your local machine:
@@ -45,7 +44,7 @@ Follow these steps to contribute your changes to **ChaatBazaar**:
    git clone https://github.com/PatelHarsh2006/ChaatBazaar.git
    ```
 
-                           **OR**
+##             OR
 
   **In Github Desktop app : **
     1. Click **Current repository**
@@ -54,9 +53,7 @@ Follow these steps to contribute your changes to **ChaatBazaar**:
     4. Choose repository
     6. Click **Clone**.
 
----
 
-   
  3. Create a Branch
     Navigate to the project directory and create a new branch for your changes:
 
@@ -65,12 +62,10 @@ Follow these steps to contribute your changes to **ChaatBazaar**:
       git checkout -b my-feature-branch
     ```
 
----
 
  4. Make Changes
-    Add your new ML projects, games, websites, or enhancements. Fix bugs or improve UI/UX as needed.
+     Fix bugs or improve UI/UX as needed.
 
----
 
  5. Commit Your Changes
     Use a meaningful commit message:
@@ -80,7 +75,6 @@ Follow these steps to contribute your changes to **ChaatBazaar**:
     git commit -m "📦 [Feature Add] Add XYZ website project"
     ```
 
----
 
  6. Push Your Changes
     Push your branch to your GitHub fork:
@@ -88,7 +82,7 @@ Follow these steps to contribute your changes to **ChaatBazaar**:
     ```bash
     git push origin my-feature-branch
     ```
----
+
 
  7. Submit a Pull Request
 
