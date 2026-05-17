@@ -14,7 +14,6 @@ async function loadMenuData() {
   }
 }
 
-
 // ===== Globals =====
 const specialsContainer = document.getElementById("specials-cards");
 const menuContainer = document.getElementById("menu-cards") || document.getElementById("menu-container");
@@ -24,7 +23,11 @@ const cartItemsContainer = document.getElementById("cart-items");
 const cartTotal = document.getElementById("cart-total") || document.getElementById("total-price");
 const checkoutBtn = document.getElementById("checkout-btn");
 
-let cart = [];
+let cart = JSON.parse(localStorage.getItem('chaatCart')) || [];
+
+function saveCart() {
+  localStorage.setItem('chaatCart', JSON.stringify(cart));
+}
 
 function formatPrice(price) {
   return `₹${price}`;
@@ -60,56 +63,132 @@ function renderSpecials() {
   if (!specialsContainer) return;
   // Pick top 3 items as specials
   const specials = menuItems.slice(0, 3);
-  specialsContainer.innerHTML = "";
-  specials.forEach(item => {
-    specialsContainer.appendChild(createCard(item));
-  });
+
+  // 1. Show skeletons immediately
+  showSkeletonCards(specialsContainer, specials.length);
+
+  // 2. Simulate async load (e.g., a real fetch would replace this timeout)
+  setTimeout(() => {
+    specialsContainer.innerHTML = "";
+    specials.forEach(item => {
+      specialsContainer.appendChild(createCard(item));
+    });
+  }, 1500); // remove/reduce when using a real API
 }
 
 function renderMenu(filter = "All") {
   if (!menuContainer) return;
-  menuContainer.innerHTML = "";
-  let filteredItems = menuItems;
-  if (filter !== "All") {
-    filteredItems = menuItems.filter(item => item.category === filter);
-  }
-  filteredItems.forEach(item => {
-    menuContainer.appendChild(createCard(item));
-  });
+
+  // 1. Show skeletons immediately
+  showSkeletonCards(menuContainer, 4);
+
+  // 2. Apply filter then render real cards after delay
+  setTimeout(() => {
+    menuContainer.innerHTML = "";
+
+    const filteredItems =
+      filter === "All"
+        ? menuItems
+        : menuItems.filter(item => item.category === filter);
+
+    if (filteredItems.length === 0) {
+      menuContainer.innerHTML =
+        `<p style="text-align:center;color:#bf360c;font-weight:600;">
+           No items found for "<em>${filter}</em>".
+         </p>`;
+      return;
+    }
+
+    filteredItems.forEach(item => {
+      menuContainer.appendChild(createCard(item));
+    });
+  }, 1200); // remove/reduce when using a real API
 }
 
 function renderCart() {
   if (!cartItemsContainer) return;
-  cartItemsContainer.innerHTML = "";
-  if (cart.length === 0) {
-    cartItemsContainer.innerHTML = `<p>Your cart is empty.</p>`;
-    if (checkoutBtn) checkoutBtn.disabled = true;
-    if (cartTotal) cartTotal.textContent = "Total: ₹0";
-    return;
+
+  // 1. Show skeletons briefly when cart first opens
+  if (cart.length > 0) {
+    showSkeletonCartItems(cart.length);
   }
 
-  cart.forEach(({ item, quantity }) => {
-    const cartItem = document.createElement("div");
-    cartItem.className = "cart-item";
-    cartItem.tabIndex = 0;
-    cartItem.setAttribute("aria-label", `${item.name}, quantity ${quantity}, price ${formatPrice(item.price * quantity)}`);
+  setTimeout(() => {
+    cartItemsContainer.innerHTML = "";
 
-    cartItem.innerHTML = `
-      <span>${item.name} × ${quantity}</span>
-      <span>${formatPrice(item.price * quantity)}</span>
-      <button aria-label="Remove one ${item.name}" class="remove-item-btn">−</button>
-    `;
+    if (cart.length === 0) {
+      cartItemsContainer.innerHTML =
+        `<p style="text-align:center;color:#5d4037;margin-top:2rem;">
+           Your cart is empty.
+         </p>`;
+      if (checkoutBtn) checkoutBtn.disabled = true;
+      if (cartTotal) cartTotal.textContent = "Total: ₹0";
+      return;
+    }
 
-    const removeBtn = cartItem.querySelector(".remove-item-btn");
-    removeBtn.addEventListener("click", () => removeFromCart(item.id));
+    cart.forEach(({ item, quantity }) => {
+      const cartItem = document.createElement("div");
+      cartItem.className = "cart-item";
+      cartItem.tabIndex = 0;
+      cartItem.setAttribute(
+        "aria-label",
+        `${item.name}, quantity ${quantity},
+         price ${formatPrice(item.price * quantity)}`
+      );
 
-    cartItemsContainer.appendChild(cartItem);
-  });
+      cartItem.innerHTML = `
+        <img src="${item.image}" alt="${item.name}" loading="lazy" />
+        <div class="cart-item-info">
+          <h4>${item.name}</h4>
+          <p>${formatPrice(item.price)} each</p>
+          <div class="qty-controls">
+            <button aria-label="Decrease ${item.name}" class="qty-decrease">−</button>
+            <span>${quantity}</span>
+            <button aria-label="Increase ${item.name}" class="qty-increase">+</button>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <p style="font-weight:700;color:#bf360c;">
+            ${formatPrice(item.price * quantity)}
+          </p>
+          <button class="cart-item-remove">Remove</button>
+        </div>
+      `;
 
-  // Update total
-  const total = cart.reduce((sum, cartItem) => sum + cartItem.item.price * cartItem.quantity, 0);
-  if (cartTotal) cartTotal.textContent = `Total: ${formatPrice(total)}`;
-  if (checkoutBtn) checkoutBtn.disabled = false;
+      // Decrease quantity
+      const decreaseBtn = cartItem.querySelector(".qty-decrease");
+      if (decreaseBtn) {
+        decreaseBtn.addEventListener("click", () => removeFromCart(item.id));
+      }
+
+      // Increase quantity
+      const increaseBtn = cartItem.querySelector(".qty-increase");
+      if (increaseBtn) {
+        increaseBtn.addEventListener("click", () => addToCart(item.id));
+      }
+
+      // Remove entirely
+      const removeBtn = cartItem.querySelector(".cart-item-remove");
+      if (removeBtn) {
+        removeBtn.addEventListener("click", () => {
+          cart = cart.filter(ci => ci.item.id !== item.id);
+          updateCartCount();
+          renderCart();
+          saveCart();
+        });
+      }
+
+      cartItemsContainer.appendChild(cartItem);
+    });
+
+    const total = cart.reduce(
+      (sum, ci) => sum + ci.item.price * ci.quantity,
+      0
+    );
+    if (cartTotal) cartTotal.textContent = `Total: ${formatPrice(total)}`;
+    if (checkoutBtn) checkoutBtn.disabled = false;
+
+  }, 600); // short delay — cart data is already local
 }
 
 function updateCartCount() {
@@ -139,6 +218,7 @@ window.checkout = function() {
   cart = [];
   updateCartCount();
   renderCart();
+  saveCart();
 };
 
 // ===== Cart Operations =====
@@ -155,6 +235,7 @@ function addToCart(id) {
   }
   updateCartCount();
   renderCart();
+  saveCart();
 }
 
 function removeFromCart(id) {
@@ -168,6 +249,7 @@ function removeFromCart(id) {
   }
   updateCartCount();
   renderCart();
+  saveCart();
 }
 
 // ===== Event Listeners =====
@@ -222,26 +304,50 @@ function setupOrderNowScroll() {
   });
 }
 
+//Functional Search bar
 function setupSearch() {
   const searchInput = document.getElementById("search-input");
   const searchBtn = document.getElementById("search-btn");
-  if (!searchInput || !searchBtn) return;
+  if (!searchInput || !searchBtn || !menuContainer) return;
 
   function searchMenu() {
     const query = searchInput.value.trim().toLowerCase();
-    if (!query) {
-      // Show all
+    const menuSection = document.getElementById("menu");
+    if (menuSection) {
+      menuSection.scrollIntoView({ behavior: "smooth" });
+    }
+
+    if (query === "") {
       renderMenu("All");
       return;
     }
-    const filtered = menuItems.filter(item => item.name.toLowerCase().includes(query) || (item.description && item.description.toLowerCase().includes(query)));
+
+    // Filter matching items
+    const filtered = menuItems.filter(item =>
+      item.name.toLowerCase().includes(query) ||
+      (item.description && item.description.toLowerCase().includes(query)) ||
+      (item.category && item.category.toLowerCase().includes(query))
+    );
+
     menuContainer.innerHTML = "";
-    filtered.forEach(item => {
-      menuContainer.appendChild(createCard(item));
-    });
+
+    // Show matching items
+    if (filtered.length > 0) {
+      filtered.forEach(item => {
+        menuContainer.appendChild(createCard(item));
+      });
+    } else {
+      menuContainer.innerHTML = `
+        <p style="text-align:center; width:100%;">
+          No items found
+        </p>
+      `;
+    }
   }
 
+  searchInput.addEventListener("keyup", searchMenu);
   searchBtn.addEventListener("click", searchMenu);
+
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       searchMenu();
@@ -358,8 +464,78 @@ async function init() {
       cart = [];
       updateCartCount();
       renderCart();
+      saveCart();
     });
   }
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+// ===== Skeleton UI Helpers =====
+
+/**
+ * Creates one skeleton card element that matches .card dimensions.
+ */
+function createSkeletonCard() {
+  const el = document.createElement("div");
+  el.className = "skeleton-card";
+  el.setAttribute("aria-hidden", "true");
+
+  el.innerHTML = `
+    <span class="skeleton sk-image"></span>
+    <span class="skeleton sk-title"></span>
+    <span class="skeleton sk-desc-line"></span>
+    <span class="skeleton sk-desc-line"></span>
+    <span class="skeleton sk-price"></span>
+    <span class="skeleton sk-btn"></span>
+  `;
+
+  return el;
+}
+
+/**
+ * Injects `count` skeleton cards into a container.
+ * @param {HTMLElement} container
+ * @param {number} count
+ */
+function showSkeletonCards(container, count = 3) {
+  if (!container) return;
+  container.innerHTML = "";
+
+  for (let i = 0; i < count; i++) {
+    container.appendChild(createSkeletonCard());
+  }
+}
+
+/**
+ * Creates one skeleton cart-item element that matches .cart-item dimensions.
+ */
+function createSkeletonCartItem() {
+  const el = document.createElement("div");
+  el.className = "skeleton-cart-item";
+  el.setAttribute("aria-hidden", "true");
+
+  el.innerHTML = `
+    <span class="skeleton sk-thumb"></span>
+    <div class="sk-lines">
+      <span class="skeleton sk-line-name"></span>
+      <span class="skeleton sk-line-price"></span>
+      <span class="skeleton sk-line-qty"></span>
+    </div>
+  `;
+
+  return el;
+}
+
+/**
+ * Injects `count` skeleton cart items into the cart panel.
+ * @param {number} count
+ */
+function showSkeletonCartItems(count = 2) {
+  if (!cartItemsContainer) return;
+  cartItemsContainer.innerHTML = "";
+
+  for (let i = 0; i < count; i++) {
+    cartItemsContainer.appendChild(createSkeletonCartItem());
+  }
+}
